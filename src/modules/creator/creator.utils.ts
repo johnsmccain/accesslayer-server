@@ -36,7 +36,7 @@ export function parseCreatorSortOptions(
  */
 export function toPrismaOrderBy(
    options: CreatorSortOptions
-): Prisma.CreatorProfileOrderByWithRelationInput {
+): any {
    return {
       [options.field]: options.order,
    };

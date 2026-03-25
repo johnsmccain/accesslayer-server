@@ -1,9 +1,6 @@
-// src/modules/creator/creator.service.ts
-import { PrismaClient } from '@prisma/client';
 import { CreatorSortOptions, toPrismaOrderBy } from './creator.utils';
 import { PaginationMetadata } from '../../utils/api-response.utils';
-
-const prisma = new PrismaClient();
+import { prisma } from '../../utils/prisma.utils';
 
 export interface GetCreatorsParams {
    page: number;
@@ -23,7 +20,7 @@ export async function getPaginatedCreators(params: GetCreatorsParams) {
          include: {
             user: {
                select: {
-                  avatarUrl: true,
+                  avatar: true,
                   firstName: true,
                   lastName: true,
                },
