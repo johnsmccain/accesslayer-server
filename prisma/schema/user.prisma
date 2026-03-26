@@ -15,5 +15,4 @@ model User {
 	
 	creatorProfile	CreatorProfile?
 	stellarWallet		StellarWallet?
-	creatorProfile		CreatorProfile?
 }
