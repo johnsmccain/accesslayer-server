@@ -13,6 +13,19 @@ export type PaginationMetaParams = {
    totalItems: number;
 };
 
+export type OffsetPaginationMeta = {
+   limit: number;
+   offset: number;
+   total: number;
+   hasMore: boolean;
+};
+
+export type OffsetPaginationMetaParams = {
+   limit: number;
+   offset: number;
+   total: number;
+};
+
 export const buildPaginationMeta = ({
    page,
    pageSize,
@@ -33,5 +46,22 @@ export const buildPaginationMeta = ({
       totalPages,
       hasNextPage: safePage < totalPages,
       hasPreviousPage: safePage > 1,
+   };
+};
+
+export const buildOffsetPaginationMeta = ({
+   limit,
+   offset,
+   total,
+}: OffsetPaginationMetaParams): OffsetPaginationMeta => {
+   const safeLimit = Math.max(1, Math.floor(limit));
+   const safeOffset = Math.max(0, Math.floor(offset));
+   const safeTotal = Math.max(0, Math.floor(total));
+
+   return {
+      limit: safeLimit,
+      offset: safeOffset,
+      total: safeTotal,
+      hasMore: safeOffset + safeLimit < safeTotal,
    };
 };
