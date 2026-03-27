@@ -1,35 +1,43 @@
 // src/modules/creator/creator.controller.ts
 import { Request, Response } from 'express';
+import { ZodError } from 'zod';
+import { z } from 'zod';
 import {
    sendPaginatedSuccess,
    sendError,
+   sendValidationError,
    ErrorCode,
 } from '../../utils/api-response.utils';
 import { getPaginatedCreators } from './creator.service';
 import { parseCreatorSortOptions } from './creator.utils';
+import { safeIntParam } from '../../utils/query.utils';
 import {
-   validatePageSize,
-   PageSizeExceededError,
-} from '../../utils/pagination-guard.utils';
+   DEFAULT_PAGE,
+   DEFAULT_PAGE_SIZE,
+   MIN_PAGE_SIZE,
+   MAX_PAGE_SIZE,
+} from '../../constants/pagination.constants';
+
+const LegacyCreatorQuerySchema = z.object({
+   page: safeIntParam({
+      defaultValue: DEFAULT_PAGE,
+      min: MIN_PAGE_SIZE,
+      max: Number.MAX_SAFE_INTEGER,
+      label: 'Page',
+   }),
+   limit: safeIntParam({
+      defaultValue: DEFAULT_PAGE_SIZE,
+      min: MIN_PAGE_SIZE,
+      max: MAX_PAGE_SIZE,
+      label: 'Limit',
+   }),
+   sortBy: z.string().optional(),
+   sortOrder: z.string().optional(),
+});
 
 export async function listCreators(req: Request, res: Response) {
    try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limitInput = parseInt(req.query.limit as string) || 10;
-      const sortBy = req.query.sortBy as string;
-      const sortOrder = req.query.sortOrder as string;
-
-      if (page < 1) {
-         return sendError(
-            res,
-            400,
-            ErrorCode.VALIDATION_ERROR,
-            'Invalid pagination parameters'
-         );
-      }
-
-      // Validate page size using the reusable guard
-      const limit = validatePageSize(limitInput);
+      const { page, limit, sortBy, sortOrder } = LegacyCreatorQuerySchema.parse(req.query);
 
       const sort = parseCreatorSortOptions(sortBy, sortOrder);
 
@@ -47,8 +55,12 @@ export async function listCreators(req: Request, res: Response) {
          'Creators retrieved successfully'
       );
    } catch (error) {
-      if (error instanceof PageSizeExceededError) {
-         return sendError(res, 400, ErrorCode.VALIDATION_ERROR, error.message);
+      if (error instanceof ZodError) {
+         const details = error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message,
+         }));
+         return sendValidationError(res, 'Invalid query parameters', details);
       }
       console.error('Error listing creators:', error);
       return sendError(

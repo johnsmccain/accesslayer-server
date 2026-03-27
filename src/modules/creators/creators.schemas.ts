@@ -3,9 +3,12 @@ import {
    CREATOR_LIST_SORT_OPTIONS,
    CREATOR_LIST_SORT_ORDERS,
 } from './creators.sort';
+import { safeIntParam } from '../../utils/query.utils';
 import {
-   MAX_PAGE_SIZE,
+   DEFAULT_PAGE_SIZE,
+   DEFAULT_OFFSET,
    MIN_PAGE_SIZE,
+   MAX_PAGE_SIZE,
 } from '../../constants/pagination.constants';
 
 /**
@@ -19,22 +22,18 @@ import {
  */
 export const CreatorListQuerySchema = z.object({
    // Pagination
-   limit: z
-      .string()
-      .optional()
-      .default('20')
-      .transform(val => parseInt(val, 10))
-      .refine(val => val >= MIN_PAGE_SIZE && val <= MAX_PAGE_SIZE, {
-         message: `Limit must be between ${MIN_PAGE_SIZE} and ${MAX_PAGE_SIZE}`,
-      }),
-   offset: z
-      .string()
-      .optional()
-      .default('0')
-      .transform(val => parseInt(val, 10))
-      .refine(val => val >= 0, {
-         message: 'Offset must be non-negative',
-      }),
+   limit: safeIntParam({
+      defaultValue: DEFAULT_PAGE_SIZE,
+      min: MIN_PAGE_SIZE,
+      max: MAX_PAGE_SIZE,
+      label: 'Limit',
+   }),
+   offset: safeIntParam({
+      defaultValue: DEFAULT_OFFSET,
+      min: 0,
+      max: Number.MAX_SAFE_INTEGER,
+      label: 'Offset',
+   }),
 
    // Sorting
    sort: z.enum(CREATOR_LIST_SORT_OPTIONS).optional().default('createdAt'),
