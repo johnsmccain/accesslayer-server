@@ -6,7 +6,7 @@ import router from './modules/index';
 import { corsMiddleware } from './middlewares/cors.middleware';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import tspecOptions from './tspec.config';
+import tspecOptions from './tspec.config';``
 import { SendMail } from './utils/mail.utils';
 import { appRateLimit } from './middlewares/rate.middleware';
 import { requestIdMiddleware } from './middlewares/request-id.middleware';

@@ -11,6 +11,7 @@ import {
    sendValidationError,
 } from '../../utils/api-response.utils';
 import { parsePublicQuery } from '../../utils/public-query-parse.utils';
+import { buildOffsetPaginationMeta } from '../../utils/pagination.utils';
 
 /**
  * Controller for GET /api/v1/creators
@@ -33,12 +34,11 @@ export const httpListCreators: AsyncController = async (req, res, next) => {
       // Serialize response
       const response: CreatorListResponse = {
          creators: serializeCreatorList(creators),
-         pagination: {
+         pagination: buildOffsetPaginationMeta({
             limit: validatedQuery.limit,
             offset: validatedQuery.offset,
             total,
-            hasMore: validatedQuery.offset + validatedQuery.limit < total,
-         },
+         }),
       };
 
       sendSuccess(res, response);

@@ -3,6 +3,7 @@ import { CreatorProfile } from '../../types/profile.types';
 import { CreatorListQueryType } from './creators.schemas';
 import { mapCreatorListSort } from './creators.sort';
 import { CreatorListResponse } from './creators.serializers';
+import { buildOffsetPaginationMeta } from '../../utils/pagination.utils';
 
 type CreatorListWhere = {
    isVerified?: boolean;
@@ -71,11 +72,10 @@ export function createEmptyCreatorListResponse(
 ): CreatorListResponse {
    return {
       creators: [],
-      pagination: {
+      pagination: buildOffsetPaginationMeta({
          limit: query.limit,
          offset: query.offset,
          total: 0,
-         hasMore: false,
-      },
+      }),
    };
 }
