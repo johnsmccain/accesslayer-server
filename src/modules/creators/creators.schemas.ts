@@ -48,6 +48,6 @@ export const CreatorListQuerySchema = z.object({
          return val === 'true';
       }),
    search: z.string().optional(),
-});
+}).strict();
 
 export type CreatorListQueryType = z.infer<typeof CreatorListQuerySchema>;
