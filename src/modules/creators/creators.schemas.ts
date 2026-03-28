@@ -4,15 +4,10 @@ import { creatorListSortDirectionQueryParam } from './creators.sort-direction.pa
 import { withCreatorListQueryStringNormalization } from './creators.query-string.utils';
 import { safeIntParam } from '../../utils/query.utils';
 import {
-  
-import {
   MIN_PAGE_SIZE,
   MAX_PAGE_SIZE,
 } from '../../constants/pagination.constants';
-  
-   MIN_PAGE_SIZE,
-   MAX_PAGE_SIZE,
-} from '../../constants/pagination.constants';
+
 import { PUBLIC_OFFSET_PAGINATION_DEFAULTS } from '../../utils/public-list-query-defaults';
 import { DEFAULT_CREATOR_LIST_SORT } from '../../constants/creator-list-sort.constants';
 import { resolveCreatorListLimit } from './creators.limit.utils';
