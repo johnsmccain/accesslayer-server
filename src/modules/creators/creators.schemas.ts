@@ -10,6 +10,7 @@ import {
 } from '../../constants/pagination.constants';
 import { DEFAULT_CREATOR_LIST_SORT } from '../../constants/creator-list-sort.constants';
 import { resolveCreatorListLimit } from './creators.limit.utils';
+import { normalizeCreatorListSearchTerm } from './creators.search-term.utils';
 
 /**
  * Validation schema for creator list query parameters.
@@ -51,7 +52,12 @@ export const CreatorListQuerySchema = z.object({
             return val === 'true';
          })
    ),
-   search: withCreatorListQueryStringNormalization(z.string().optional()),
+   search: withCreatorListQueryStringNormalization(
+      z
+         .string()
+         .optional()
+         .transform(val => normalizeCreatorListSearchTerm(val))
+   ),
 });
 
 export type CreatorListQueryType = z.infer<typeof CreatorListQuerySchema>;
