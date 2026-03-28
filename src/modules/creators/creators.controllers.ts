@@ -5,12 +5,15 @@ import {
    serializeCreatorList,
    CreatorListResponse,
 } from './creators.serializers';
+import { wrapPublicCreatorListResponse } from './public-creator-list-envelope.utils';
 import { mapPublicCreatorStats } from './creators.stats';
 import {
    sendSuccess,
    sendValidationError,
 } from '../../utils/api-response.utils';
-import { ZodError } from 'zod';
+import { parsePublicQuery } from '../../utils/public-query-parse.utils';
+import { buildOffsetPaginationMeta } from '../../utils/pagination.utils';
+import { buildCreatorListRequestContext } from './creator-list-context.utils';
 
 /**
  * Controller for GET /api/v1/creators
@@ -20,32 +23,29 @@ import { ZodError } from 'zod';
  */
 export const httpListCreators: AsyncController = async (req, res, next) => {
    try {
+      const ctx = buildCreatorListRequestContext(req);
+
       // Validate query parameters
-      const validatedQuery = CreatorListQuerySchema.parse(req.query);
+      const parsed = parsePublicQuery(CreatorListQuerySchema, ctx.query);
+      if (!parsed.ok) {
+         return sendValidationError(res, 'Invalid query parameters', parsed.details);
+      }
+      const validatedQuery = parsed.data;
 
       // Fetch creators and total count
       const [creators, total] = await fetchCreatorList(validatedQuery);
 
-      // Serialize response
-      const response: CreatorListResponse = {
-         creators: serializeCreatorList(creators),
-         pagination: {
+      const response: CreatorListResponse = wrapPublicCreatorListResponse(
+         serializeCreatorList(creators),
+         buildOffsetPaginationMeta({
             limit: validatedQuery.limit,
             offset: validatedQuery.offset,
             total,
-            hasMore: validatedQuery.offset + validatedQuery.limit < total,
-         },
-      };
+         })
+      );
 
       sendSuccess(res, response);
    } catch (error) {
-      if (error instanceof ZodError) {
-         const details = error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message,
-         }));
-         return sendValidationError(res, 'Invalid query parameters', details);
-      }
       next(error);
    }
 };

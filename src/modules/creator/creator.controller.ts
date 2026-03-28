@@ -1,9 +1,8 @@
 // src/modules/creator/creator.controller.ts
 import { Request, Response } from 'express';
-import { ZodError } from 'zod';
 import { z } from 'zod';
 import {
-   sendPaginatedSuccess,
+   sendSuccess,
    sendError,
    sendValidationError,
    ErrorCode,
@@ -11,22 +10,25 @@ import {
 import { getPaginatedCreators } from './creator.service';
 import { parseCreatorSortOptions } from './creator.utils';
 import { safeIntParam } from '../../utils/query.utils';
+import { parsePublicQuery } from '../../utils/public-query-parse.utils';
+import { wrapPublicCreatorListResponse } from '../creators/public-creator-list-envelope.utils';
+import { buildCreatorListRequestContext } from '../creators/creator-list-context.utils';
+import { normalizeCreatorListPage } from './creator-list-page.guard';
 import {
-   DEFAULT_PAGE,
-   DEFAULT_PAGE_SIZE,
    MIN_PAGE_SIZE,
    MAX_PAGE_SIZE,
 } from '../../constants/pagination.constants';
+import { PUBLIC_PAGE_PAGINATION_DEFAULTS } from '../../utils/public-list-query-defaults';
 
 const LegacyCreatorQuerySchema = z.object({
    page: safeIntParam({
-      defaultValue: DEFAULT_PAGE,
+      defaultValue: PUBLIC_PAGE_PAGINATION_DEFAULTS.page,
       min: MIN_PAGE_SIZE,
       max: Number.MAX_SAFE_INTEGER,
       label: 'Page',
    }),
    limit: safeIntParam({
-      defaultValue: DEFAULT_PAGE_SIZE,
+      defaultValue: PUBLIC_PAGE_PAGINATION_DEFAULTS.limit,
       min: MIN_PAGE_SIZE,
       max: MAX_PAGE_SIZE,
       label: 'Limit',
@@ -37,7 +39,17 @@ const LegacyCreatorQuerySchema = z.object({
 
 export async function listCreators(req: Request, res: Response) {
    try {
-      const { page, limit, sortBy, sortOrder } = LegacyCreatorQuerySchema.parse(req.query);
+      const ctx = buildCreatorListRequestContext(req);
+      const parsed = parsePublicQuery(LegacyCreatorQuerySchema, ctx.query);
+      if (!parsed.ok) {
+         return sendValidationError(
+            res,
+            'Invalid query parameters',
+            parsed.details
+         );
+      }
+      const { limit, sortBy, sortOrder } = parsed.data;
+      const page = normalizeCreatorListPage(parsed.data.page);
 
       const sort = parseCreatorSortOptions(sortBy, sortOrder);
 
@@ -47,21 +59,13 @@ export async function listCreators(req: Request, res: Response) {
          sort,
       });
 
-      return sendPaginatedSuccess(
+      return sendSuccess(
          res,
-         creators,
-         meta,
+         wrapPublicCreatorListResponse(creators, meta),
          200,
          'Creators retrieved successfully'
       );
    } catch (error) {
-      if (error instanceof ZodError) {
-         const details = error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message,
-         }));
-         return sendValidationError(res, 'Invalid query parameters', details);
-      }
       console.error('Error listing creators:', error);
       return sendError(
          res,

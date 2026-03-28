@@ -1,15 +1,16 @@
 import { z } from 'zod';
-import {
-   CREATOR_LIST_SORT_OPTIONS,
-   CREATOR_LIST_SORT_ORDERS,
-} from './creators.sort';
+import { creatorListSortDirectionQueryParam } from './creators.sort-direction.parse';
+import { withCreatorListQueryStringNormalization } from './creators.query-string.utils';
 import { safeIntParam } from '../../utils/query.utils';
 import {
-   DEFAULT_PAGE_SIZE,
-   DEFAULT_OFFSET,
    MIN_PAGE_SIZE,
    MAX_PAGE_SIZE,
 } from '../../constants/pagination.constants';
+import { PUBLIC_OFFSET_PAGINATION_DEFAULTS } from '../../utils/public-list-query-defaults';
+import {
+   CREATOR_LIST_SORT_FIELDS,
+   DEFAULT_CREATOR_LIST_SORT,
+} from '../../constants/creator-list-sort.constants';
 
 /**
  * Validation schema for creator list query parameters.
@@ -23,21 +24,23 @@ import {
 export const CreatorListQuerySchema = z.object({
    // Pagination
    limit: safeIntParam({
-      defaultValue: DEFAULT_PAGE_SIZE,
+      defaultValue: PUBLIC_OFFSET_PAGINATION_DEFAULTS.limit,
       min: MIN_PAGE_SIZE,
       max: MAX_PAGE_SIZE,
       label: 'Limit',
    }),
    offset: safeIntParam({
-      defaultValue: DEFAULT_OFFSET,
+      defaultValue: PUBLIC_OFFSET_PAGINATION_DEFAULTS.offset,
       min: 0,
       max: Number.MAX_SAFE_INTEGER,
       label: 'Offset',
    }),
 
    // Sorting
-   sort: z.enum(CREATOR_LIST_SORT_OPTIONS).optional().default('createdAt'),
-   order: z.enum(CREATOR_LIST_SORT_ORDERS).optional().default('desc'),
+   sort: withCreatorListQueryStringNormalization(
+      z.enum(CREATOR_LIST_SORT_FIELDS).optional().default(DEFAULT_CREATOR_LIST_SORT)
+   ),
+   order: creatorListSortDirectionQueryParam(),
 
    // Filters
    verified: z
@@ -49,5 +52,16 @@ export const CreatorListQuerySchema = z.object({
       }),
    search: z.string().optional(),
 }).strict();
+   verified: withCreatorListQueryStringNormalization(
+      z
+         .string()
+         .optional()
+         .transform(val => {
+            if (val === undefined) return undefined;
+            return val === 'true';
+         })
+   ),
+   search: withCreatorListQueryStringNormalization(z.string().optional()),
+});
 
 export type CreatorListQueryType = z.infer<typeof CreatorListQuerySchema>;

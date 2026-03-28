@@ -3,6 +3,8 @@ import { CreatorProfile } from '../../types/profile.types';
 import { CreatorListQueryType } from './creators.schemas';
 import { mapCreatorListSort } from './creators.sort';
 import { CreatorListResponse } from './creators.serializers';
+import { wrapPublicCreatorListResponse } from './public-creator-list-envelope.utils';
+import { buildOffsetPaginationMeta } from '../../utils/pagination.utils';
 
 type CreatorListWhere = {
    isVerified?: boolean;
@@ -64,18 +66,17 @@ export async function fetchCreatorList(
  *
  * @example
  * const emptyResponse = createEmptyCreatorListResponse(validatedQuery);
- * // Returns: { creators: [], pagination: { limit, offset, total: 0, hasMore: false } }
+ * // Returns: { items: [], meta: { limit, offset, total: 0, hasMore: false } }
  */
 export function createEmptyCreatorListResponse(
    query: CreatorListQueryType
 ): CreatorListResponse {
-   return {
-      creators: [],
-      pagination: {
+   return wrapPublicCreatorListResponse(
+      [],
+      buildOffsetPaginationMeta({
          limit: query.limit,
          offset: query.offset,
          total: 0,
-         hasMore: false,
-      },
-   };
+      })
+   );
 }
