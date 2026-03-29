@@ -5,7 +5,6 @@ import {
    serializeCreatorListResponse,
    CreatorListResponse,
 } from './creators.serializers';
-import { wrapPublicCreatorListResponse } from './public-creator-list-envelope.utils';
 import { mapPublicCreatorStats } from './creators.stats';
 import {
    sendSuccess,
