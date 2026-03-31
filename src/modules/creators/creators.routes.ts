@@ -1,11 +1,8 @@
 import { Router } from 'express';
-import { httpListCreators } from './creators.controllers';
-<<<<<<< feat/public-headers-helper
-import { setPublicHeaders } from '../../utils/public-headers.utils';
-=======
+import { httpListCreators, httpGetCreatorStats } from './creators.controllers';
 import { cacheControl } from '../../middlewares/cache-control.middleware';
-import { PUBLIC_ENDPOINT_CACHE_PRESETS } from '../../constants/public-endpoint-cache.constants';
->>>>>>> main
+import { CREATOR_PUBLIC_ROUTE_CACHE_PRESETS } from '../../constants/creator-public-cache.constants';
+import { CREATOR_PUBLIC_ROUTE_NAMES } from '../../constants/creator-public-routes.constants';
 
 const creatorsRouter = Router();
 
@@ -15,14 +12,22 @@ const creatorsRouter = Router();
  * List all creators with pagination and filtering.
  * Public endpoint with 5-minute cache.
  */
-<<<<<<< feat/public-headers-helper
-creatorsRouter.get('/', setPublicHeaders, httpListCreators);
-=======
 creatorsRouter.get(
    '/',
-   cacheControl(PUBLIC_ENDPOINT_CACHE_PRESETS.short),
+   cacheControl(CREATOR_PUBLIC_ROUTE_CACHE_PRESETS[CREATOR_PUBLIC_ROUTE_NAMES.LIST]),
    httpListCreators
 );
->>>>>>> main
+
+/**
+ * GET /api/v1/creators/:id/stats
+ *
+ * Get public stats for a specific creator.
+ * Public endpoint with 5-minute cache.
+ */
+creatorsRouter.get(
+   '/:id/stats',
+   cacheControl(CREATOR_PUBLIC_ROUTE_CACHE_PRESETS[CREATOR_PUBLIC_ROUTE_NAMES.GET_STATS]),
+   httpGetCreatorStats
+);
 
 export default creatorsRouter;
